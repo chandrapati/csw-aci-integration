@@ -207,10 +207,11 @@ A: **Yes** — use the **Secure Connector** tunnel (or an HTTP proxy on port 80/
 
 ## 11. Video references
 
-> There is no dedicated "CSW + ACI connector" video in the public catalog; the videos below cover the **connector / label-import** pattern, **scopes**, and **enforcement discipline** that this integration builds on.
+> **Start with the dedicated CSW + ACI integration video below.** The remaining videos cover the **connector / label-import** pattern, **scopes**, and **enforcement discipline** that this integration builds on.
 
 | Video | Why it's relevant |
 |---|---|
+| 🎬 **[Cisco Secure Workload + Cisco ACI Integration](https://www.youtube.com/watch?v=u7jh3Zw1hlg)** | **Dedicated walkthrough** of the CSW ↔ ACI integration — start here |
 | [Connector Overview](https://youtu.be/H6QxuouzeC8) | What connectors do and how they enrich telemetry with fabric context |
 | [Cisco Secure Workload: Labels](https://www.youtube.com/watch?v=NLoZq0wiTU8) | How imported ACI labels (EPG/BD/VRF) drive policy |
 | [Cisco Secure Workload: Scopes](https://www.youtube.com/watch?v=3KBmanCNm4U) | Scope design — directly relevant to VRF→scope mapping |

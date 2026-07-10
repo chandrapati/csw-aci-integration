@@ -97,10 +97,11 @@ The ACI connector **extends the cloud connectors and the FMC connector**, and ad
 
 ## Video References
 
-> There is currently **no dedicated CSW + ACI video**. The videos below cover the **connector / label-import** pattern, **scopes**, and **enforcement discipline** this integration builds on. See the guide's [§11](CSW-ACI-Integration-Guide.md#11-video-references).
+> **Start with the dedicated CSW + ACI integration video below.** The remaining videos cover the **connector / label-import** pattern, **scopes**, and **enforcement discipline** this integration builds on. See the guide's [§11](CSW-ACI-Integration-Guide.md#11-video-references).
 
 | Video | Why it's relevant |
 |---|---|
+| 🎬 **[Cisco Secure Workload + Cisco ACI Integration](https://www.youtube.com/watch?v=u7jh3Zw1hlg)** | **Dedicated walkthrough** of the CSW ↔ ACI integration — start here |
 | [Connector Overview](https://youtu.be/H6QxuouzeC8) | Connector / label-enrichment pattern |
 | [Cisco Secure Workload: Labels](https://www.youtube.com/watch?v=NLoZq0wiTU8) | How imported ACI labels drive policy |
 | [Cisco Secure Workload: Scopes](https://www.youtube.com/watch?v=3KBmanCNm4U) | Scope design — relevant to VRF→scope mapping |
