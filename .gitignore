@@ -1,0 +1,19 @@
+# Generated artifacts
+*.pdf
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Secrets — never commit APIC credentials, keys, or tokens
+*.env
+.env
+secrets.*
+*_credentials.json
+api_credentials.json
+apic-*.json
+*.key
+*.pem
