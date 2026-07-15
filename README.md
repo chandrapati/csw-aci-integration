@@ -78,6 +78,30 @@ The ACI connector **extends the cloud connectors and the FMC connector**, and ad
 
 ---
 
+## ESG vs EPG — Why CSW Enforces with ESGs
+
+Cisco Secure Workload programs its micro-segmentation into the ACI fabric using **Endpoint Security Groups (ESGs)** — **not** classic EPGs. Knowing the difference explains why the integration is non-disruptive to your existing forwarding design.
+
+| | **EPG** — Endpoint Group | **ESG** — Endpoint Security Group |
+|---|---|---|
+| **Scope** | Tied to a **single Bridge Domain (BD)** | Spans the whole **VRF** (across multiple BDs) |
+| **Role** | Couples **forwarding + security** together | **Security only** — forwarding stays at the EPG/BD level |
+| **Classification** | VLAN / interface bindings | Flexible **selectors**: IP/subnet, tag (VM name / MAC / VMware tag), or an entire EPG (**EPG selector**) |
+| **Class ID** | Local (global with inter-VRF contracts) | **Global** |
+| **Contracts** | EPG ↔ EPG | ESG ↔ ESG, ESG ↔ L3Out, ESG ↔ vzAny — **EPG ↔ ESG contracts are _not_ supported** |
+| **Hardware** | 1st-gen leaf and later | Later-gen leaf switches only |
+
+**Why CSW uses ESGs:** decoupling *security* from *forwarding* lets CSW group and enforce policy on endpoints **across bridge domains within a VRF** without touching your VLAN/BD design. On enforcement CSW ① maps each **VRF → a CSW scope**, ② auto-creates **ESGs** with membership defined by **subnet selectors** (no manual selector work), ③ translates discovered app dependencies into **ESG-to-ESG contracts**, and ④ pushes them to APIC → leaf **TCAM** (after a **TCAM pre-flight check**).
+
+> **Good to know**
+> - ESGs still **depend on EPGs for VLAN/port mapping** — forwarding stays on the EPG/BD; ESGs take over security.
+> - A single contract **cannot** be shared by an EPG and an ESG, so CSW consistently owns **ESG-to-ESG** contracts (duplicate the contract/filters if both need them).
+> - **Brownfield migration** is easy: an **EPG selector** absorbs an entire EPG (and its endpoints) into an ESG, inheriting EPG-level contracts.
+> - For VMware VMM **tag/name** selectors, enable **"Allow Micro-Segmentation"** on the EPG's VMM domain association; a tag/VMM selector match takes **precedence** over an EPG-selector match.
+> - See the hands-on **ESG demo** in [Video References](#video-references).
+
+---
+
 ## Files in This Repo
 
 | File | Description |
@@ -102,6 +126,7 @@ The ACI connector **extends the cloud connectors and the FMC connector**, and ad
 | Video | Why it's relevant |
 |---|---|
 | 🎬 **[Cisco Secure Workload + Cisco ACI Integration](https://www.youtube.com/watch?v=u7jh3Zw1hlg)** | **Dedicated walkthrough** of the CSW ↔ ACI integration — start here |
+| 🎬 **[ACI Endpoint Security Groups (ESG) — Demo, Part 1](https://youtu.be/83IaGTBg4H8)** | ESG concept, selectors (tag / VMM / EPG selector), and EPG→ESG migration — the constructs CSW enforces with |
 | [Connector Overview](https://youtu.be/H6QxuouzeC8) | Connector / label-enrichment pattern |
 | [Cisco Secure Workload: Labels](https://www.youtube.com/watch?v=NLoZq0wiTU8) | How imported ACI labels drive policy |
 | [Cisco Secure Workload: Scopes](https://www.youtube.com/watch?v=3KBmanCNm4U) | Scope design — relevant to VRF→scope mapping |
