@@ -24,10 +24,10 @@ The ACI integration is **two-way**:
 |---|---|
 | CSW policy and ACI fabric policy are authored separately and can drift | CSW imports **ACI endpoints + labels** and maps **VRF → scope**, giving one consistent segmentation model |
 | No CSW visibility of what lives on the ACI fabric | CSW gains **visibility of workloads/IPs** belonging to the ACI fabric and the **labels ingested from ACI** |
-| Enforcing east-west inside the fabric requires manual EPG/contract work | CSW can **push ESG contracts** into the fabric per-VRF for micro-segmentation |
-| Mixed estate (VMs, containers, cloud, bare metal) attached to ACI | The ACI connector covers **virtualization (vCenter/Hyper-V/OpenStack), containers (K8s/OpenShift), and clouds (AWS/Azure/GCP)** |
+| Enforcing east-west inside the fabric requires manual EPG/contract work | CSW **AI-discovers** intent and pushes **ESG contracts** into the fabric per-VRF, **agentlessly** |
+| Mixed estate attached to ACI | The connector covers any workload on the fabric — **VMM-integrated** hypervisors (VMware vCenter, Microsoft SCVMM / Hyper-V, Kubernetes) plus **bare-metal** and directly/indirectly attached hosts |
 
-> **Key idea:** the ACI connector **extends the capabilities of the cloud connectors and the FMC connector**, and **adds**: (1) visibility of workloads/IPs in the ACI fabric, (2) visibility of labels ingested from ACI, and (3) **Scope-to-ACI (VRF) mapping**.
+> **Key idea:** CSW **discovers** segmentation intent from workload telemetry using AI, then enforces it **agentlessly on the fabric** as ESG contracts. The ACI connector adds: (1) visibility of workloads/IPs in the ACI fabric, (2) ingestion of ACI labels, (3) **Scope-to-VRF mapping**, and (4) **APIC/fabric health (incl. TCAM) monitoring**.
 
 ---
 
@@ -59,14 +59,12 @@ The ACI integration is **two-way**:
 
 **Fabric micro-segmentation via ESGs** — CSW can push **Endpoint Security Group** contracts into the fabric for VRFs where you enable segmentation, extending zero-trust into the ACI data plane.
 
-**Broad workload coverage** — because ESGs gather telemetry regardless of where the workload runs, the ACI connector spans:
+**Workload coverage** — the integration applies to workloads attached to the ACI fabric. CSW **agents** on those workloads supply the telemetry that drives AI policy discovery; enforcement is then applied **agentlessly** on the fabric. Endpoint/EPG context comes from ACI **VMM integration** or physical-domain bindings:
 
-| Category | Platforms |
+| Attachment model | Platforms |
 |---|---|
-| Virtualization | VMware vCenter, Microsoft Hyper-V, OpenStack |
-| Containers | Kubernetes, OpenShift |
-| Clouds | AWS, Azure, GCP |
-| Physical | Bare-metal endpoints on the fabric |
+| VMM-integrated hypervisors | VMware vCenter, Microsoft SCVMM (Hyper-V), Kubernetes |
+| Non-VMM (physical domain) | Bare-metal and hypervisor hosts, directly or indirectly attached to leaf switches |
 
 ---
 
@@ -113,6 +111,7 @@ For a hands-on ESG walkthrough — building ESGs, tag vs. EPG selectors, and EPG
 - **APIC admin credentials** (username/password) for a service account with rights to read endpoints and write ESG/contract objects for the target VRFs.
 - The **IP addresses (and ports)** of the APIC nodes — **up to 7** APIC nodes per connector.
 - Fabric leaf switches with **sufficient TCAM** for the contracts you intend to push (see [§8](#8-tcam--enforcement-status)).
+- **Minimum ACI software (for enforcement):** **5.0.1+** for East-West / intra-VRF; **6.1(4)+** for North-South / L3Out external (L3Out enforcement fails on releases earlier than 6.1(4)). Any supported ACI release works for **visibility / learning**. Enforcement uses **ESG** constructs.
 
 ### Cisco Secure Workload side
 - CSW **4.x** (on-prem or SaaS). ACI connector lives under **Manage → Workloads → Connectors**.
@@ -157,7 +156,7 @@ Skip if the CSW on-prem cluster can reach the APIC directly. For **SaaS** or a s
 
 1. **Connector health:** `Manage → Workloads → Connectors → ACI` → your connector shows a **healthy/connected** status (first full snapshot is asynchronous — allow ~1 minute).
 2. **Inventory & labels:** `Investigate → Inventory Search` → confirm fabric endpoints appear and carry `orchestrator_*` labels (EPG / BD / VRF context).
-3. **Coverage:** confirm the workload categories you expect (VMware / Hyper-V / OpenStack / K8s / OpenShift / cloud / bare metal) are represented.
+3. **Coverage:** confirm the workload categories you expect (VMM-integrated **VMware vCenter / SCVMM (Hyper-V) / Kubernetes**, plus **bare-metal** and directly/indirectly attached hosts) are represented.
 
 ---
 
@@ -181,12 +180,13 @@ This is the step that ties fabric segmentation to CSW policy.
 
 Once VRFs are mapped and segmentation is enabled:
 
-1. Build/validate policy in the mapped scope using CSW **policy discovery** and **live analysis** (no enforcement) — exactly as for any CSW scope.
-2. When you **enforce**, CSW translates intent into **ESG contracts** and pushes them to the fabric for the mapped VRFs.
-3. CSW checks **TCAM availability** on all participating switches **before** pushing (see [§8](#8-tcam--enforcement-status)); policy is committed only when there is sufficient TCAM.
-4. Roll out **per VRF / per scope**, validating allowed vs. denied flows at each step.
+1. Keep **agent enforcement *Disabled*** in the agent profile for ACI workloads, so the **fabric** (not the host agents) enforces these policies.
+2. Build/validate policy in the mapped scope using CSW **AI policy discovery** and **live analysis** (no enforcement) — exactly as for any CSW scope.
+3. Enable enforcement on **both** the application **workspace** **and** the **ACI connector** — both are required for policy to reach the fabric.
+4. CSW translates intent into **ESG contracts** (with subnet-selector ESG membership) and, after checking **TCAM availability** on all participating switches (see [§8](#8-tcam--enforcement-status)), pushes them to APIC. Policy is committed only when there is sufficient TCAM.
+5. Roll out **per VRF / per scope**, validating allowed vs. denied flows at each step.
 
-> **Where enforcement happens:** with the ACI connector, segmentation is realized as **fabric ESG contracts** (leaf TCAM). You can still enforce on the **workloads themselves** with CSW agents where installed — use the model that fits each tier.
+> **Where enforcement happens:** segmentation is realized **agentlessly** as **fabric ESG contracts** (leaf TCAM). CSW creates application profiles named `secureworkload-*` on APIC — these are **managed exclusively by CSW; do not edit them manually**. Because ACI is an **allow-list** model, CSW pushes **allow** policies only — it does **not** render Deny/Block or catch-all-allow rules (see [§9](#9-caveats-limitations--troubleshooting)).
 
 ---
 
@@ -205,7 +205,22 @@ The connector's **Status** tab reports **TCAM utilization for all fabric switche
 
 ---
 
-## 9. Caveats & troubleshooting
+## 9. Caveats, limitations & troubleshooting
+
+**Supported-scope limitations** (from the Cisco Secure Workload 4.0 ACI documentation — confirm before customer rollout):
+
+| Limitation | Detail |
+|---|---|
+| **Allow-list only** | CSW does **not** apply **Deny/Block** policies; **catch-all allow** policies are **not** rendered |
+| **Multi-Site** | Multi-Site ACI fabric architectures are **not supported** |
+| **Policy types** | **FQDN-based** and **process-based** policies are **not supported** on the fabric |
+| **Single ownership** | **Dual-management** (CSW-owned **and** ACI-owned policies) is **not supported**; once enforced, **all** policies for the mapped VRF are managed by CSW — even for workloads without an agent |
+| **No hit counts** | ACI does **not** expose per-rule statistics / policy-hit counts for these policies |
+| **Managed objects** | CSW-created application profiles (`secureworkload-*`) must **not** be edited manually in APIC |
+| **Assumptions** | CSW assumes the required **network configuration already exists** on the fabric |
+| **Min versions** | Enforcement requires ACI **5.0.1+** (E-W / intra-VRF) or **6.1(4)+** (N-S / L3Out); CSW **4.0+** |
+
+**Troubleshooting**
 
 | Symptom / topic | Guidance |
 |---|---|
@@ -228,7 +243,10 @@ A: Fabric **endpoints and IPs**, plus **ACI labels** (EPG / Bridge Domain / VRF 
 A: **Yes.** In addition to visibility, CSW can push **ESG contracts** into the fabric for mapped VRFs (programmed into leaf TCAM), which is what distinguishes it from a label-only orchestrator.
 
 **Q: What workload types does it cover?**
-A: Virtualization (**vCenter, Hyper-V, OpenStack**), containers (**Kubernetes, OpenShift**), and clouds (**AWS, Azure, GCP**), plus bare metal — ESGs gather telemetry regardless of where workloads run.
+A: Any workload attached to the ACI fabric — **VMM-integrated** hypervisors (**VMware vCenter, Microsoft SCVMM / Hyper-V, Kubernetes**) and **bare-metal** or directly/indirectly attached hosts. CSW **agents** on the workloads supply the telemetry for AI policy discovery; enforcement is applied **agentlessly** on the fabric.
+
+**Q: Can CSW push Deny/Block rules to ACI?**
+A: **No.** ACI uses an **allow-list** model, so CSW renders **allow** policies only — Deny/Block and catch-all-allow policies are not pushed. **FQDN-** and **process-based** policies, and **Multi-Site** fabrics, are also not supported (see [§9](#9-caveats-limitations--troubleshooting)).
 
 **Q: How many APIC nodes and connectors?**
 A: **Up to 7 APIC nodes** per connector; a fabric can have more than one connector but **one per fabric is recommended**.
@@ -261,6 +279,8 @@ A: **Yes** — use the **Secure Connector** tunnel (or an HTTP proxy on port 80/
 
 ## 12. References
 
+- [**CSW 4.0 (On-Prem) — Secure Workload Integration with ACI**](https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-on-prem-v40/m-aci-integration-with-secure-workload.html) — **primary reference** (prerequisites, min versions, caveats, enforcement)
+- [CSW 4.0 (SaaS) — Secure Workload Integration with ACI](https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-saas-v40/m-aci-integration-with-secure-workload.html)
 - [CSW — Connectors (On-Prem 4.0, ACI Connector section)](https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-on-prem-v40/configure-and-manage-connectors-for-secure-workload.html)
 - [CSW — Connectors (SaaS 4.0)](https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-saas-v40/m-connectors.html)
 - [CSW — OpenAPI](https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-on-prem-v40/secure-workload-openapis.html)
