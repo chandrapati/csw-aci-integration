@@ -22,12 +22,13 @@ A step-by-step, **beginner-friendly** integration guide for **Cisco ACI** + **Ci
 | **Integration type** | ACI **connector** (`type: aci`) — bidirectional |
 | **Data imported** | Fabric endpoints/IPs + ACI labels (EPG / BD / VRF / tenant) → `orchestrator_*` |
 | **Mapping** | **Scope ↔ VRF** (one VRF → one scope, incl. child scopes) |
-| **Enforcement** | ✅ **ESG contracts** pushed to the fabric (programmed into leaf **TCAM**) |
-| **Workload coverage** | VMware · Hyper-V · OpenStack · Kubernetes · OpenShift · AWS/Azure/GCP · bare metal |
+| **Enforcement** | ✅ **Agentless** on the fabric — CSW pushes **ESG contracts** to APIC (programmed into leaf **TCAM**) |
+| **Workload coverage** | Any workload attached to the ACI fabric — **VMM-integrated** hypervisors (VMware vCenter, Microsoft SCVMM / Hyper-V, Kubernetes) plus **bare-metal** and directly/indirectly attached hosts. CSW **agents** on the workloads supply the telemetry that drives AI policy discovery |
 | **Transport** | HTTPS REST to APIC (self-signed cert supported); proxy ports 80/8080/443/3128 |
 | **Scale** | Up to **7 APIC nodes** per connector; **one connector per fabric** recommended |
 | **Connectivity** | Direct (on-prem) or via **Secure Connector** tunnel (SaaS / non-routable APIC) |
-| **Verified against** | CSW 4.x on-prem and SaaS; Cisco ACI / APIC |
+| **Minimum versions** | CSW **4.0+**; ACI **5.0.1+** (East-West / intra-VRF enforcement); ACI **6.1(4)+** (North-South / L3Out external enforcement) |
+| **Not supported** | Multi-Site ACI; Deny/Block or catch-all-allow policies (ACI is allow-list); FQDN & process-based policies; dual-managed (CSW- **and** ACI-owned) policies — see [Limitations](#limitations--support-notes) |
 
 ---
 
@@ -67,14 +68,31 @@ See the [full step-by-step guide](CSW-ACI-Integration-Guide.md) or [open the HTM
 
 ## Capabilities — at a glance
 
-The ACI connector **extends the cloud connectors and the FMC connector**, and adds:
+Through the **ACI connector** (APIC REST, managed from Cisco Security Cloud Control for SaaS), CSW provides:
 
 | Capability | Detail |
 |---|---|
-| **Fabric visibility** | Workloads / IPs belonging to the ACI fabric |
-| **Label ingestion** | ACI labels (EPG / BD / VRF / tenant) as `orchestrator_*` |
-| **Scope-to-VRF mapping** | Bind fabric VRFs to CSW scopes for unified policy |
-| **ESG enforcement** | Push segmentation into the fabric per-VRF (leaf TCAM) |
+| **Fabric visibility** | Workloads / IPs belonging to the ACI fabric, plus **APIC cluster health** and switch **TCAM** health |
+| **Label ingestion** | ACI labels (`tenant`, `vrf`, `bridge_domain`, `endpoint_group`, `application_profile`, `l3out`, `fabric_path`, and their `_dn` forms) as `orchestrator_*` |
+| **Scope-to-VRF mapping** | Bind each fabric VRF to a CSW scope (1:1) for unified policy |
+| **AI policy discovery** | Discover, validate, and analyze segmentation intent from workload telemetry before enforcing |
+| **Agentless ESG enforcement** | Translate intent into **ESG contracts** + memberships (subnet selectors) and push per-VRF to the fabric (leaf TCAM); CSW **suspends** enforcement if TCAM over-utilization is estimated |
+
+---
+
+## Limitations & Support Notes
+
+Per the Cisco Secure Workload 4.0 [Secure Workload Integration with ACI](https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-on-prem-v40/m-aci-integration-with-secure-workload.html) documentation, note the following before deploying (share with the customer):
+
+| Area | Limitation |
+|---|---|
+| **Minimum versions** | CSW **4.0+**; ACI **5.0.1+** for East-West / intra-VRF enforcement; ACI **6.1(4)+** for North-South / L3Out external enforcement (L3Out enforcement fails on releases earlier than 6.1(4)) |
+| **Allow-list model** | CSW does **not** apply **Deny/Block** policies, and **catch-all allow** policies are **not** rendered — ACI's policy model is allow-list |
+| **Multi-Site** | **Multi-Site** ACI fabric architectures are **not supported** |
+| **Policy types** | **FQDN-based** and **process-based** policies are **not supported** on the fabric |
+| **Ownership** | **Dual-management** (Secure Workload-owned **and** ACI-owned policies) is **not supported**. Once enforcement is enabled, **all policies for the mapped VRF are managed by CSW** — even for workloads without an agent. CSW-created application profiles are named `secureworkload-*` and must **not** be edited manually in APIC |
+| **Statistics** | ACI does **not** provide per-rule statistics / policy-hit counts for these policies |
+| **Assumptions** | CSW assumes the required **network configuration already exists** on the ACI fabric |
 
 ---
 
