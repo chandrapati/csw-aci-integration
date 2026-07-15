@@ -70,6 +70,42 @@ The ACI integration is **two-way**:
 
 ---
 
+## 2.5 ESG vs EPG — the constructs CSW enforces with
+
+Cisco ACI offers two ways to group endpoints for policy. Understanding both explains **why CSW enforces with ESGs** and why that is non-disruptive to your fabric forwarding.
+
+- **EPG (Endpoint Group)** — the classic construct. An EPG is tied to a **single Bridge Domain (BD)** and defines **forwarding *and* security at the same time**. That tight coupling means an EPG cannot span more than one BD, so finer segmentation forces you to carve up BDs/VLANs.
+- **ESG (Endpoint Security Group)** — a **security-only** construct that operates at the **VRF** level. Forwarding stays on the EPG/BD; security moves to the ESG. One ESG can therefore group endpoints **across multiple bridge domains** in the same VRF.
+
+| Criteria | EPG | ESG |
+|---|---|---|
+| Scope | Bridge Domain | **VRF** |
+| Function | Forwarding **+** security | **Security only** |
+| Classification | VLAN / interface bindings | **Selectors**: IP/subnet, tag (VM name / MAC / VMware tag / VMM), or **EPG selector** (whole EPG) |
+| Class ID | Local (global with inter-VRF contracts) | **Global** |
+| Contracts | EPG ↔ EPG | ESG ↔ ESG, ESG ↔ L3Out (external EPG), ESG ↔ vzAny |
+| EPG ↔ ESG contract | — | **Not supported** |
+| Hardware | 1st-gen leaf and later | Later-gen leaf switches only |
+
+**ESG selectors** (how endpoints join an ESG):
+
+- **Tag selector** — match by IP/subnet, MAC, or **VMM tags** (VM name, or a VMware category/tag). Matching by VM name or VMware tag *requires* **"Allow Micro-Segmentation"** enabled on the EPG's VMM domain association (and, for a VMware vDS, an isolated private VLAN so traffic is forwarded to the leaf for classification).
+- **EPG selector** — assign an **entire EPG** into an ESG; the ESG inherits that EPG's endpoints and any EPG-level contracts, making **brownfield EPG→ESG migration** nearly effortless.
+- **Selector precedence** — for the same endpoint, a **tag/VMM selector** match wins over an **EPG-selector** match.
+
+**How CSW maps policy to ESGs.** After you map a VRF to a scope and enable segmentation, then **enforce** (see [§7](#7-enforce-segmentation-esg-contracts)), CSW:
+
+1. maps the **VRF → CSW scope**,
+2. auto-creates **ESGs** whose membership is defined by **subnet selectors** — current versions require **no manual selector configuration**,
+3. compiles discovered application dependencies into **ESG-to-ESG contracts**, and
+4. pushes the contracts + ESG memberships to APIC for programming into leaf **TCAM** (after the TCAM pre-flight in [§8](#8-tcam--enforcement-status)).
+
+> Because a single contract **cannot** be shared between an EPG and an ESG, CSW manages its own **ESG-to-ESG** contracts. If the same filters are needed by both an EPG and an ESG, ACI requires a **duplicate** contract that references the same filter set.
+
+For a hands-on ESG walkthrough — building ESGs, tag vs. EPG selectors, and EPG→ESG migration — see the **ESG demo** in [§11](#11-video-references).
+
+---
+
 ## 3. Prerequisites
 
 ### ACI side
@@ -212,6 +248,7 @@ A: **Yes** — use the **Secure Connector** tunnel (or an HTTP proxy on port 80/
 | Video | Why it's relevant |
 |---|---|
 | 🎬 **[Cisco Secure Workload + Cisco ACI Integration](https://www.youtube.com/watch?v=u7jh3Zw1hlg)** | **Dedicated walkthrough** of the CSW ↔ ACI integration — start here |
+| 🎬 **[ACI Endpoint Security Groups (ESG) — Demo, Part 1](https://youtu.be/83IaGTBg4H8)** | ESG concept & benefits, endpoint classification with tag / VMM / **EPG selectors**, contracts, and EPG→ESG migration — the constructs CSW enforces with (see [§2.5](#25-esg-vs-epg--the-constructs-csw-enforces-with)) |
 | [Connector Overview](https://youtu.be/H6QxuouzeC8) | What connectors do and how they enrich telemetry with fabric context |
 | [Cisco Secure Workload: Labels](https://www.youtube.com/watch?v=NLoZq0wiTU8) | How imported ACI labels (EPG/BD/VRF) drive policy |
 | [Cisco Secure Workload: Scopes](https://www.youtube.com/watch?v=3KBmanCNm4U) | Scope design — directly relevant to VRF→scope mapping |
@@ -230,4 +267,6 @@ A: **Yes** — use the **Secure Connector** tunnel (or an HTTP proxy on port 80/
 - [CSW Compatibility Matrix](https://www.cisco.com/c/m/en_us/products/security/secure-workload-compatibility-matrix.html)
 - [Cisco ACI / APIC documentation](https://www.cisco.com/c/en/us/support/cloud-systems-management/application-policy-infrastructure-controller-apic/series.html)
 - [Cisco ACI Endpoint Security Groups (ESG) white paper](https://www.cisco.com/c/en/us/solutions/collateral/data-center-virtualization/application-centric-infrastructure/white-paper-c11-743951.html)
+- [Cisco ACI Endpoint Security Group (ESG) Design Guide](https://www.cisco.com/c/en/us/td/docs/dcn/whitepapers/cisco-aci-esg-design-guide.html)
+- [Cisco APIC Security Configuration Guide — Endpoint Security Groups](https://www.cisco.com/c/en/us/td/docs/dcn/aci/apic/6x/security-configuration/cisco-apic-security-configuration-guide-62x/endpoint-security-groups-62x.html)
 - [Secure Connector (SaaS / private network)](https://github.com/chandrapati/csw-secure-connector)
