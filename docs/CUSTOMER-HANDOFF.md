@@ -83,9 +83,20 @@
 
 ---
 
+## Support limitations (share with the customer)
+
+- **Minimum ACI software:** **5.0.1+** for East-West / intra-VRF enforcement; **6.1(4)+** for North-South / L3Out external enforcement. CSW **4.0+**.
+- **Allow-list model:** CSW pushes **allow** policies only — **no Deny/Block**, and **catch-all-allow** is not rendered.
+- **Not supported:** **Multi-Site** ACI fabrics; **FQDN-** and **process-based** policies; **dual-managed** (CSW- and ACI-owned) policies.
+- **Ownership:** once enforcement is on, CSW manages **all** policy for the mapped VRF (even agentless workloads); CSW-created `secureworkload-*` application profiles must not be hand-edited in APIC.
+- **No per-rule hit counts** are available from ACI for these policies.
+
+---
+
 ## References
 
 - Full guide: [CSW-ACI-Integration-Guide.md](../CSW-ACI-Integration-Guide.md)
+- **CSW 4.0 — Secure Workload Integration with ACI (primary):** https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-on-prem-v40/m-aci-integration-with-secure-workload.html
 - Cisco Connectors (ACI): [On-Prem 4.0](https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-on-prem-v40/configure-and-manage-connectors-for-secure-workload.html)
 - Cisco ACI ESG white paper: https://www.cisco.com/c/en/us/solutions/collateral/data-center-virtualization/application-centric-infrastructure/white-paper-c11-743951.html
 
