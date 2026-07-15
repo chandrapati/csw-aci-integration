@@ -61,12 +61,13 @@ The connector **Status** tab shows **per-switch TCAM utilization**. CSW pushes p
 
 ---
 
-## 5. Coexistence with agent enforcement
+## 5. Agents vs. fabric enforcement
 
-The ACI connector realizes segmentation as **fabric ESG contracts** (leaf TCAM). Where CSW **agents** are installed on the endpoints, you can also enforce at the **host** layer. Choose the enforcement point per tier:
+The ACI connector realizes segmentation **agentlessly** as **fabric ESG contracts** (leaf TCAM). For workloads in an **ACI-enforced VRF**, keep the **agent profile enforcement set to *Disabled*** — the fabric enforces, not the host — to avoid double-enforcement. The agents are still valuable: they supply the **telemetry** that drives AI policy discovery.
 
-| Tier | Typical enforcement |
+| Workload / tier | Enforcement point |
 |---|---|
-| Bare-metal / appliance endpoints on the fabric | ACI ESG contracts (fabric) |
-| VMs / containers with CSW agents | Host enforcement (agent) and/or ESG |
-| Mixed | Both, kept consistent via the VRF↔scope mapping |
+| In an ACI-enforced VRF (mapped + segmentation on) | **Fabric** (ACI ESG contracts); agent enforcement **Disabled** |
+| Not enforced via the fabric | **Host** (CSW agent) where installed |
+
+> **Dual-management** of the same VRF (CSW-owned **and** ACI-owned policies) is **not supported** — let CSW own the mapped VRF's policy end to end. CSW-created `secureworkload-*` application profiles on APIC must not be hand-edited.
