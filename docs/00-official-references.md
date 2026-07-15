@@ -2,6 +2,8 @@
 
 | Topic | URL |
 |-------|-----|
+| **CSW 4.0 On-Prem — Secure Workload Integration with ACI (PRIMARY)** | https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-on-prem-v40/m-aci-integration-with-secure-workload.html |
+| **CSW 4.0 SaaS — Secure Workload Integration with ACI** | https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-saas-v40/m-aci-integration-with-secure-workload.html |
 | **CSW 4.0 On-Prem — Connectors (ACI Connector section)** | https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-on-prem-v40/configure-and-manage-connectors-for-secure-workload.html |
 | **CSW 4.0 SaaS — Connectors** | https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-saas-v40/m-connectors.html |
 | **CSW — OpenAPI** | https://www.cisco.com/c/en/us/td/docs/security/workload_security/secure_workload/user-guide/4_0/cisco-secure-workload-user-guide-on-prem-v40/secure-workload-openapis.html |
