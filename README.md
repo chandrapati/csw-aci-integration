@@ -139,17 +139,22 @@ Cisco Secure Workload programs its micro-segmentation into the ACI fabric using 
 
 ## Video References
 
-> **Start with the dedicated CSW + ACI integration video below.** The remaining videos cover the **connector / label-import** pattern, **scopes**, and **enforcement discipline** this integration builds on. See the guide's [§11](CSW-ACI-Integration-Guide.md#11-video-references).
+> **Start with the ACI Micro Segmentation series below.** The remaining videos cover the **connector / label-import** pattern, **scopes**, and **enforcement discipline** this integration builds on. See the guide's [§11](CSW-ACI-Integration-Guide.md#11-video-references).
 
 | Video | Why it's relevant |
 |---|---|
-| 🎬 **[Cisco Secure Workload + Cisco ACI Integration](https://www.youtube.com/watch?v=u7jh3Zw1hlg)** | **Dedicated walkthrough** of the CSW ↔ ACI integration — start here |
+| 🎬 **[ACI Micro Segmentation with Secure Workload — Part 1](https://youtu.be/2nI1wU83pqY)** | **Newest walkthrough — start here.** Native ACI connector setup, ACI endpoint and policy discovery, ESG contract enforcement pushed through APIC, and continuous leaf TCAM monitoring. Presented by **Jorge Quintero**, Cisco TME. |
+| 🎬 [Cisco Secure Workload + Cisco ACI Integration](https://www.youtube.com/watch?v=u7jh3Zw1hlg) | Earlier end-to-end walkthrough of the CSW ↔ ACI integration |
 | 🎬 **[ACI Endpoint Security Groups (ESG) — Demo, Part 1](https://youtu.be/83IaGTBg4H8)** | ESG concept, selectors (tag / VMM / EPG selector), and EPG→ESG migration — the constructs CSW enforces with |
 | [Connector Overview](https://youtu.be/H6QxuouzeC8) | Connector / label-enrichment pattern |
 | [Cisco Secure Workload: Labels](https://www.youtube.com/watch?v=NLoZq0wiTU8) | How imported ACI labels drive policy |
 | [Cisco Secure Workload: Scopes](https://www.youtube.com/watch?v=3KBmanCNm4U) | Scope design — relevant to VRF→scope mapping |
 | [Production and Test Risk Reduction](https://www.youtube.com/watch?v=HKT18Ylt4IY) | Monitor → enforce discipline before pushing ESG contracts |
 | [CSW-User-Education library](https://github.com/chandrapati/CSW-User-Education) | Full curated CSW learning path |
+
+**Part 1 covers three use cases**, which map directly to the phases in this guide: **visibility** through ACI endpoint and policy discovery, **enforcement** using ESG constructs and contracts applied via APIC, and **continuous TCAM monitoring** of the fabric. Part 2 in the series covers ACI with Secure Firewall insertion in the path of EPG/ESG constructs.
+
+> **Video attribution:** Videos linked here are the property of their respective creators and channels. Particular credit to **Jorge Quintero** (Cisco Technical Marketing Engineer) for the *ACI Micro Segmentation with Secure Workload* series on the [Cisco Secure Workload YouTube channel](https://www.youtube.com/@ciscosecureworkload). This repository links to publicly available content without reproduction or modification.
 
 ---
 
