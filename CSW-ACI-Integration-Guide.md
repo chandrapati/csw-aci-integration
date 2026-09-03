@@ -261,11 +261,13 @@ A: **Yes** — use the **Secure Connector** tunnel (or an HTTP proxy on port 80/
 
 ## 11. Video references
 
-> **Start with the dedicated CSW + ACI integration video below.** The remaining videos cover the **connector / label-import** pattern, **scopes**, and **enforcement discipline** that this integration builds on.
+> **Start with the *ACI Microsegmentation with Secure Workload* series (Parts 1–2) below.** The remaining videos cover the **connector / label-import** pattern, **scopes**, and **enforcement discipline** that this integration builds on.
 
 | Video | Why it's relevant |
 |---|---|
-| 🎬 **[Cisco Secure Workload + Cisco ACI Integration](https://www.youtube.com/watch?v=u7jh3Zw1hlg)** | **Dedicated walkthrough** of the CSW ↔ ACI integration — start here |
+| 🎬 **[ACI Microsegmentation with Secure Workload — Part 1](https://youtu.be/2nI1wU83pqY)** | **Start here.** Native ACI connector setup, ACI endpoint & policy discovery, ESG contract enforcement pushed via APIC, and continuous leaf TCAM monitoring. Presented by **Jorge Quintero**, Cisco TME. |
+| 🎬 **[ACI Microsegmentation with Secure Workload — Part 2](https://www.youtube.com/watch?v=zRt9X9bGm8c)** | **Secure Firewall insertion.** The different **firewall insertion modes** (ACI Insertion and Service Graph PBR / firewall insertion), the advantages of an **agent-based** approach to microsegmentation, and **virtual patching at the network level** with **Secure Workload + Secure Firewall** (CSW exports workload CVEs to FMC to activate the matching IPS signatures). Presented by **Jorge Quintero**, Cisco TME. |
+| 🎬 [Cisco Secure Workload + Cisco ACI Integration](https://www.youtube.com/watch?v=u7jh3Zw1hlg) | Earlier end-to-end walkthrough of the CSW ↔ ACI integration |
 | 🎬 **[ACI Endpoint Security Groups (ESG) — Demo, Part 1](https://youtu.be/83IaGTBg4H8)** | ESG concept & benefits, endpoint classification with tag / VMM / **EPG selectors**, contracts, and EPG→ESG migration — the constructs CSW enforces with (see [§2.5](#25-esg-vs-epg--the-constructs-csw-enforces-with)) |
 | [Connector Overview](https://youtu.be/H6QxuouzeC8) | What connectors do and how they enrich telemetry with fabric context |
 | [Cisco Secure Workload: Labels](https://www.youtube.com/watch?v=NLoZq0wiTU8) | How imported ACI labels (EPG/BD/VRF) drive policy |
